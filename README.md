@@ -1,3 +1,16 @@
+# How to start 
+
+```shell
+
+npm install 
+
+# if secp256k1 spits out an error do:  
+npm install secp256k1 --ignore-scripts
+# and then run npm install again 
+
+```
+
+
 # Private Blockchain Application
 
 You are starting your journey as a Blockchain Developer, this project allows you to demonstrate

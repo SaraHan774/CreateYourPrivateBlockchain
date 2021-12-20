@@ -134,10 +134,20 @@ class Blockchain {
             const time = parseInt(message.split(':')[1]); // second part contains the time
             let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
             if (currentTime - time < 5 * 60 * 1000) {
-                bitcoinMessage.verify(message, address, signature);
-                const block = new BlockClass.Block({data: star});
-                await self._addBlock(block);
-                resolve(block);
+                try {
+                    console.log(`address : ${address}`)
+                    console.log(`message : ${message}`)
+                    console.log(`signature : ${signature}`)
+                    console.log(`star : ${star}`)
+
+                    bitcoinMessage.verify(message, address, signature);
+                    const block = new BlockClass.Block({data: star});
+                    await self._addBlock(block);
+                    resolve(block);
+                } catch (e) {
+                    console.error(e)
+                    reject(e)
+                }
             }
         });
     }
@@ -213,18 +223,22 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            self.chain.map((block) => {
-                    const hash = block.hash;
-                    block.validate().then((isValid) => {
-                            if (!isValid) {
-                                errorLog.push(`Block with hash ${hash} is invalid`);
-                            } else {
-                                console.log('valid block')
-                            }
-                        }
-                    )
+            let prev = self.chain[0];
+
+            for (let i = 1; i < self.chain.length; i++) {
+                let cur = self.chain
+                if (cur.previousBlockHash !== prev.hash) {
+                    resolve('chain is linked improperly')
                 }
-            );
+
+                let isBlockValid = await cur.validate();
+                if (!isBlockValid) {
+                    errorLog.push(`Block ${cur} is invalid`);
+                    resolve(errorLog);
+                }
+                prev = cur;
+            }
+
             resolve(errorLog);
         });
     }
